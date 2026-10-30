@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<!-- 端末上部のバーの色。アプリ背景（--m-page）に合わせる -->
+<meta name="theme-color" content="#F4EFE6">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="セカンドブレイン">
+<title>セカンドブレイン</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- 時計の数字を丸める紙のしわ。番号が大きいほど強く丸まる -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="cr1" x="-30%" y="-30%" width="160%" height="160%"><feTurbulence type="fractalNoise" baseFrequency=".05" numOctaves="2" seed="4" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="5" xChannelSelector="R" yChannelSelector="G" result="d"/><feDiffuseLighting in="n" surfaceScale="2" lighting-color="#fff" result="l"><feDistantLight azimuth="225" elevation="50"/></feDiffuseLighting><feComposite in="l" in2="d" operator="in" result="lc"/><feBlend in="d" in2="lc" mode="multiply"/></filter>
+    <filter id="cr2" x="-30%" y="-30%" width="160%" height="160%"><feTurbulence type="fractalNoise" baseFrequency=".06" numOctaves="2" seed="9" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="10" xChannelSelector="R" yChannelSelector="G" result="d"/><feDiffuseLighting in="n" surfaceScale="4" lighting-color="#fff" result="l"><feDistantLight azimuth="225" elevation="40"/></feDiffuseLighting><feComposite in="l" in2="d" operator="in" result="lc"/><feBlend in="d" in2="lc" mode="multiply"/></filter>
+    <filter id="cr3" x="-30%" y="-30%" width="160%" height="160%"><feTurbulence type="fractalNoise" baseFrequency=".07" numOctaves="2" seed="2" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="16" xChannelSelector="R" yChannelSelector="G" result="d"/><feDiffuseLighting in="n" surfaceScale="6" lighting-color="#fff" result="l"><feDistantLight azimuth="225" elevation="35"/></feDiffuseLighting><feComposite in="l" in2="d" operator="in" result="lc"/><feBlend in="d" in2="lc" mode="multiply"/></filter>
+  </defs>
+</svg>
+
+<div class="login" id="login" hidden>
+  <h1>セカンドブレイン</h1>
+  <form id="loginForm" autocomplete="on">
+    <input type="email" id="email" autocomplete="username" required aria-label="メールアドレス">
+    <input type="password" id="password" autocomplete="current-password" required aria-label="パスワード" placeholder="パスワード">
+    <button class="primary" type="submit" id="loginBtn">ログイン</button>
+  </form>
+  <div class="err" id="loginErr" role="alert"></div>
+</div>
+
+<div id="app" hidden>
+<!-- 1つの画面をスマホと PC で共用。タブはホームとノート。幅 900px 以上では左にホーム・右にカレンダー、メニュー・追加・ノート編集はダイアログ -->
+<div class="m">
+  <header class="m-top" id="mTop">
+    <button class="m-icon" type="button" id="mMenuBtn" aria-label="メニュー"><svg viewBox="0 0 24 24" aria-hidden="true"><g fill="currentColor"><circle cx="6" cy="6" r="1.6"/><circle cx="12" cy="6" r="1.6"/><circle cx="18" cy="6" r="1.6"/><circle cx="6" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="18" cy="12" r="1.6"/><circle cx="6" cy="18" r="1.6"/><circle cx="12" cy="18" r="1.6"/><circle cx="18" cy="18" r="1.6"/></g></svg></button>
+    <div class="m-title">
+      <div class="m-stamp">
+        <div class="ck" id="mClock" role="img" aria-label="時計"><span class="ck-g" id="ckH"></span><span class="ck-c" aria-hidden="true"><i></i><i></i></span><span class="ck-g" id="ckM"></span></div>
+        <div class="dt" id="mDate" role="img" aria-label="今日"><span class="dt-md"><span class="ck-g" id="dtM"></span><i class="dt-sep" aria-hidden="true"></i><span class="ck-g" id="dtD"></span></span><span class="ck-g" id="dtW"></span></div>
+      </div>
+      <div class="m-sync" id="mSync"></div>
+    </div>
+    <button class="m-icon" type="button" id="mCalBtn" aria-label="カレンダー"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="4" y="5.5" width="16" height="14" rx="3"/><path d="M4 10h16M8.5 3.5v4M15.5 3.5v4"/></svg></button>
+  </header>
+  <nav class="m-tabs" id="mTabs" role="tablist" aria-label="画面">
+    <button type="button" role="tab" data-tab="home">ホーム</button>
+    <button type="button" role="tab" data-tab="notes">ノート</button>
+  </nav>
+
+  <main id="mHome" class="m-view">
+    <div class="m-hint" data-push-hint hidden></div>
+    <div class="m-hint warn" data-sync-stat></div>
+    <div class="m-hint warn" id="nodb" hidden>データを読み込めませんでした。通信状態を確認してください。</div>
+    <section class="m-card m-ringcard" id="mRings" aria-label="今週の完了率"></section>
+    <div id="mReplyBox" hidden>
+      <div class="m-sec"><h2>返信待ち</h2><span class="m-cap">@されてから24時間以内</span></div>
+      <ul class="m-tasks" id="mReplies"></ul>
+    </div>
+    <div class="m-sec"><h2>予定</h2><span id="mFilterTag"></span></div>
+    <div class="m-proj" id="mProj"></div>
+    <div class="m-sec"><h2>やること</h2><button class="m-link" type="button" id="mShowDone">完了も表示</button></div>
+    <ul class="m-tasks" id="mTasks"></ul>
+  </main>
+
+  <section id="mCal" class="m-view" hidden aria-labelledby="mCalTitle">
+    <header class="m-bar"><button class="m-icon" type="button" data-back aria-label="戻る"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button><h2 id="mCalTitle">カレンダー</h2><span class="m-icon"></span></header>
+    <div class="m-days" id="mDays"></div>
+    <div class="m-allday" id="mAllDay"></div>
+    <div class="m-timeline" id="mTimeline"></div>
+  </section>
+
+  <section id="mMenu" class="m-view" hidden aria-labelledby="mMenuTitle">
+    <header class="m-bar"><button class="m-icon" type="button" data-back aria-label="戻る"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button><h2 id="mMenuTitle">メニュー</h2><span class="m-icon"></span></header>
+    <div class="m-cats" id="mCats"></div>
+    <div class="m-group">
+      <button class="m-row" type="button" data-sync-btn>今すぐ同期</button>
+      <div class="m-rowsub" data-sync-stat></div>
+      <button class="m-row" type="button" data-push-btn hidden>締切の通知をオンにする</button>
+      <div class="m-rowsub" data-push-hint hidden></div>
+      <button class="m-row danger" type="button" data-logout>ログアウト</button>
+    </div>
+    <p class="m-credit">時計と日付の文字: <a href="https://www.freepik.com" target="_blank" rel="noopener">Designed by Freepik</a></p>
+  </section>
+
+  <section id="mAdd" class="m-view" hidden aria-labelledby="mAddHead">
+    <form id="mAddForm" autocomplete="off">
+      <header class="m-bar"><button class="m-icon" type="button" data-back aria-label="戻る"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button><h2 id="mAddHead">新しいタスク</h2><button class="m-icon accent" type="submit" id="mAddSave" aria-label="保存"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button></header>
+      <input class="m-input" type="text" id="mAddTitle" placeholder="何をする？" aria-label="内容" maxlength="200">
+      <div class="m-lbl">期限</div>
+      <div class="m-chips" id="mDue" role="radiogroup" aria-label="期限">
+        <label><input type="radio" name="mdue" value="today" checked><span>今日</span></label>
+        <label><input type="radio" name="mdue" value="tomorrow"><span>明日</span></label>
+        <label><input type="radio" name="mdue" value="pick"><span>日付を選ぶ</span></label>
+        <label><input type="radio" name="mdue" value="none"><span>なし</span></label>
+      </div>
+      <div class="m-daterow" id="mDateRow" hidden><input type="date" id="mAddDate" aria-label="期限の日付"></div>
+      <div class="m-daterow"><input type="time" id="mAddTime" aria-label="期限の時刻（任意）"><span class="m-note">時刻は任意</span></div>
+      <div class="m-lbl">分類</div>
+      <div class="m-chips area" role="radiogroup" aria-label="分類">
+        <label data-a="uni"><input type="radio" name="marea" value="大学" checked><span>大学</span></label>
+        <label data-a="work"><input type="radio" name="marea" value="仕事"><span>仕事</span></label>
+        <label data-a="life"><input type="radio" name="marea" value="個人"><span>個人</span></label>
+      </div>
+    </form>
+  </section>
+
+  <!-- ノートの掲示板。ピン留め→新しく直した順に付箋を並べる -->
+  <section id="mNotes" class="m-view" hidden aria-label="ノート">
+    <input class="m-search" type="search" id="mNoteSearch" placeholder="ノートを検索" aria-label="ノートを検索">
+    <div id="mPinnedBox" hidden>
+      <div class="m-sec"><h2>ピン留め</h2></div>
+      <div class="m-board" id="mPinned"></div>
+    </div>
+    <div class="m-sec" id="mOthersHead" hidden><h2>そのほか</h2></div>
+    <div class="m-board" id="mBoard"></div>
+  </section>
+
+  <section id="mNote" class="m-view" hidden aria-labelledby="mNoteHead">
+    <form id="mNoteForm" autocomplete="off">
+      <header class="m-bar"><button class="m-icon" type="button" data-back aria-label="戻る"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button><h2 id="mNoteHead">新しいノート</h2><button class="m-icon accent" type="submit" id="mNoteSave" aria-label="保存"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button></header>
+      <div class="m-noteed" id="mNoteEd">
+        <input class="m-ntitle" type="text" id="mNoteTitle" placeholder="タイトル" aria-label="タイトル" maxlength="100">
+        <textarea class="m-nbody" id="mNoteBody" placeholder="メモ" aria-label="本文" maxlength="10000"></textarea>
+      </div>
+      <div class="m-lbl">色</div>
+      <div class="m-chips m-colors" id="mNoteColors" role="radiogroup" aria-label="色">
+        <label data-n="none"><input type="radio" name="ncolor" value="none" checked><span aria-label="なし"></span></label>
+        <label data-n="yellow"><input type="radio" name="ncolor" value="yellow"><span aria-label="黄"></span></label>
+        <label data-n="green"><input type="radio" name="ncolor" value="green"><span aria-label="緑"></span></label>
+        <label data-n="blue"><input type="radio" name="ncolor" value="blue"><span aria-label="青"></span></label>
+        <label data-n="pink"><input type="radio" name="ncolor" value="pink"><span aria-label="ピンク"></span></label>
+        <label data-n="purple"><input type="radio" name="ncolor" value="purple"><span aria-label="紫"></span></label>
+      </div>
+      <div class="m-chips m-noteopts">
+        <label><input type="checkbox" id="mNotePin"><span>ピン留め</span></label>
+        <button class="m-del" type="button" id="mNoteDel" hidden>削除</button>
+      </div>
+    </form>
+  </section>
+
+  <div class="m-scrim" id="mScrim" hidden></div>
+  <button class="m-fab" type="button" id="mFab" aria-label="タスクを追加"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+  <div class="m-toast" id="mToast" role="status" hidden></div>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
